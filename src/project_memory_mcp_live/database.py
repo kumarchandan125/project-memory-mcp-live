@@ -1,68 +1,85 @@
 
+from __future__ import annotations
+
+from typing import Final
+
 from sqlalchemy import text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from project_memory_mcp_live.config import get_settings
 
+_ENGINE: AsyncEngine | None = None
 
-_engine: AsyncEngine | None = None
+_SUPPORTED_POSTGRES_DRIVERS: Final[frozenset[str]] = frozenset(
+    {
+        "postgres",
+        "postgresql",
+        "postgresql+psycopg",
+        "postgresql+psycopg2",
+        "postgresql+asyncpg",
+    }
+)
 
 
 def build_async_database_url(database_url: str) -> URL:
-    """Convert a standard PostgreSQL URL to the Psycopg driver URL."""
+    """Normalize a PostgreSQL URL for SQLAlchemy's async psycopg driver."""
 
     url = make_url(database_url)
+    drivername = url.drivername.lower()
 
-    if url.drivername in ("postgres", "postgresql"):
+    if drivername in {"postgres", "postgresql"}:
         return url.set(drivername="postgresql+psycopg")
 
-    if url.drivername == "postgresql+psyg":
-        return url
+    if drivername not in _SUPPORTED_POSTGRES_DRIVERS:
+        raise ValueError(
+            "Unsupported PostgreSQL database URL scheme. "
+            "Expected a PostgreSQL URL using postgres or postgresql."
+        )
 
-    raise ValueError("Unsupported PostgreSQL database URL scheme.")
+    return url.set(drivername="postgresql+psycopg")
 
 
 def get_engine() -> AsyncEngine:
-    """Create and reuse the asynchronous database engine."""
+    """Create and reuse a singleton async database engine."""
 
-    global _engine
+    global _ENGINE
 
-    if _engine is None:
-        settings = get_settings()
+    if _ENGINE is not None:
+        return _ENGINE
 
-        if settings.database_url is None:
-            raise RuntimeError("DATABASE_URL is not configured.")
+    settings = get_settings()
+    if settings.database_url is None:
+        raise RuntimeError("DATABASE_URL is not configured.")
 
-        database_url = build_async_database_url(
-            settings.database_url.get_secret_value()
-        )
+    database_url = build_async_database_url(settings.database_url.get_secret_value())
 
-        _engine = create_async_engine(
-            database_url,
-            pool_pre_ping=True,
-            pool_size=3,
-            max_overflow=2,
-            pool_recycle=1800,
-        )
+    _ENGINE = create_async_engine(
+        database_url,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=10,
+        pool_timeout=30,
+        pool_recycle=1800,
+        echo=settings.app_env == "development",
+    )
 
-    return _engine
+    return _ENGINE
 
 
 async def check_database_connection() -> None:
-    """Verify that PostgreSQL is reachable."""
+    """Verify that PostgreSQL is reachable and accepting connections."""
 
     engine = get_engine()
-
     async with engine.connect() as connection:
         await connection.execute(text("SELECT 1"))
 
 
 async def close_database() -> None:
-    """Dispose of the database connection pool."""
+    """Dispose of the shared database connection pool."""
 
-    global _engine
+    global _ENGINE
 
-    if _engine is not None:
-        await _engine.dispose()
-        _engine = None
+    if _ENGINE is not None:
+        await _ENGINE.dispose()
+        _ENGINE = None
