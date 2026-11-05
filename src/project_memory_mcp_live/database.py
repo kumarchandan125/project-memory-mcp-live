@@ -1,84 +1,106 @@
-from __future__ import annotations
-
-from typing import Final
+from collections.abc import AsyncIterator
 
 from sqlalchemy import text
 from sqlalchemy.engine import URL, make_url
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from project_memory_mcp_live.config import get_settings
 
-_ENGINE: AsyncEngine | None = None
+_engine: AsyncEngine | None = None
 
-_SUPPORTED_POSTGRES_DRIVERS: Final[frozenset[str]] = frozenset(
-    {
-        "postgres",
-        "postgresql",
-        "postgresql+psycopg",
-        "postgresql+psycopg2",
-        "postgresql+asyncpg",
-    }
-)
+_session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
 def build_async_database_url(database_url: str) -> URL:
-    """Normalize a PostgreSQL URL for SQLAlchemy's async psycopg driver."""
+    """Convert a PostgreSQL URL to the Psycopg driver URL."""
 
     url = make_url(database_url)
     drivername = url.drivername.lower()
 
-    if drivername in {"postgres", "postgresql"}:
+    if drivername in ("postgres", "postgresql"):
         return url.set(drivername="postgresql+psycopg")
 
-    if drivername not in _SUPPORTED_POSTGRES_DRIVERS:
-        raise ValueError(
-            "Unsupported PostgreSQL database URL scheme. "
-            "Expected a PostgreSQL URL using postgres or postgresql."
-        )
+    if drivername == "postgresql+psycopg":
+        return url.set(drivername="postgresql+psycopg")
 
-    return url.set(drivername="postgresql+psycopg")
+    raise ValueError(
+        "Unsupported database URL scheme. "
+        "Expected postgres, postgresql, or postgresql+psycopg."
+    )
 
 
 def get_engine() -> AsyncEngine:
-    """Create and reuse a singleton async database engine."""
+    """Create or return the shared asynchronous database engine."""
 
-    global _ENGINE
+    global _engine
 
-    if _ENGINE is not None:
-        return _ENGINE
+    if _engine is None:
+        settings = get_settings()
 
-    settings = get_settings()
-    if settings.database_url is None:
-        raise RuntimeError("DATABASE_URL is not configured.")
+        if settings.database_url is None:
+            raise RuntimeError("DATABASE_URL is not configured.")
 
-    database_url = build_async_database_url(settings.database_url.get_secret_value())
+        database_url = build_async_database_url(
+            settings.database_url.get_secret_value()
+        )
 
-    _ENGINE = create_async_engine(
-        database_url,
-        pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10,
-        pool_timeout=30,
-        pool_recycle=1800,
-        echo=settings.app_env == "development",
-    )
+        _engine = create_async_engine(
+            database_url,
+            pool_pre_ping=True,
+            pool_size=3,
+            max_overflow=2,
+            pool_recycle=1800,
+        )
 
-    return _ENGINE
+    return _engine
+
+
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Create or return the shared async session factory."""
+
+    global _session_factory
+
+    if _session_factory is None:
+        _session_factory = async_sessionmaker(
+            bind=get_engine(),
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+        )
+
+    return _session_factory
+
+
+async def get_session() -> AsyncIterator[AsyncSession]:
+    """Provide a database session and close it after use."""
+
+    session_factory = get_session_factory()
+
+    async with session_factory() as session:
+        yield session
 
 
 async def check_database_connection() -> None:
-    """Verify that PostgreSQL is reachable and accepting connections."""
+    """Verify that the database connection is working."""
 
     engine = get_engine()
+
     async with engine.connect() as connection:
         await connection.execute(text("SELECT 1"))
 
 
 async def close_database() -> None:
-    """Dispose of the shared database connection pool."""
+    """Dispose of the engine and reset database resources."""
 
-    global _ENGINE
+    global _engine, _session_factory
 
-    if _ENGINE is not None:
-        await _ENGINE.dispose()
-        _ENGINE = None
+    if _engine is not None:
+        await _engine.dispose()
+
+    _engine = None
+    _session_factory = None
