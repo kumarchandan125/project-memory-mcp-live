@@ -16,6 +16,10 @@ from project_memory_mcp_live.schemas.task import (
     TaskUpdateInput,
 )
 
+from project_memory_mcp_live.services.exceptions import(
+    ProjectNotFoundError,
+    TaskNotFoundError
+)
 
 class TaskService:
     """Business logic for project tasks."""
@@ -38,7 +42,7 @@ class TaskService:
             )
 
             if project is None:
-                raise ValueError("Project not found.")
+                raise ProjectNotFoundError(str(project_id))
 
             return await self.task_repository.create(
                 project_id=project_id,
@@ -53,7 +57,7 @@ class TaskService:
         task = await self.task_repository.get_by_id(task_id)
 
         if task is None:
-            raise ValueError("Task not found.")
+            raise TaskNotFoundError(str(task_id))
 
         return task
 
@@ -82,7 +86,7 @@ class TaskService:
             task = await self.task_repository.get_by_id(task_id)
 
             if task is None:
-                raise ValueError("Task not found.")
+                raise TaskNotFoundError(str(task_id))
 
             changes = data.model_dump(exclude_unset=True)
 
@@ -100,6 +104,6 @@ class TaskService:
             task = await self.task_repository.get_by_id(task_id)
 
             if task is None:
-                raise ValueError("Task not found.")
+                raise TaskNotFoundError(str(task_id))
 
             await self.task_repository.delete(task)

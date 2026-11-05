@@ -10,7 +10,9 @@ from project_memory_mcp_live.repositories import (
 from project_memory_mcp_live.schemas.project_update import (
     ProjectUpdateCreate,
 )
-
+from project_memory_mcp_live.services.exceptions import(
+    ProjectNotFoundError
+)
 
 class ProjectUpdateService:
     """Business logic for development progress."""
@@ -33,7 +35,7 @@ class ProjectUpdateService:
             )
 
             if project is None:
-                raise ValueError("Project not found.")
+                raise ProjectNotFoundError(str(project_id))
 
             return await self.update_repository.create(
                 project_id=project_id,
@@ -55,7 +57,7 @@ class ProjectUpdateService:
         )
 
         if project is None:
-            raise ValueError("Project not found.")
+            raise ProjectNotFoundError(str(project_id))
 
         return await self.update_repository.get_by_project(
             project_id=project_id,

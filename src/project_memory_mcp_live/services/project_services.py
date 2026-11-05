@@ -6,14 +6,10 @@ from project_memory_mcp_live.schemas.project import (
     ProjectCreate,
     ProjectUpdateInput,
 )
-
-
-class ProjectAlreadyExistsError(Exception):
-    """Raised when a project with the same name exists."""
-
-
-class ProjectNotFoundError(Exception):
-    """Raised when a project cannot be found."""
+from project_memory_mcp_live.services.exceptions import (
+    DuplicateProjectError,
+    ProjectNotFoundError,
+)
 
 
 class ProjectService:
@@ -35,9 +31,7 @@ class ProjectService:
             )
 
             if existing is not None:
-                raise ProjectAlreadyExistsError(
-                    f"Project '{data.name}' already exists."
-                )
+                raise DuplicateProjectError(data.name)
 
             project = await self.repository.create(
                 name=data.name,
@@ -58,9 +52,7 @@ class ProjectService:
         )
 
         if project is None:
-            raise ProjectNotFoundError(
-                f"Project '{project_name}' was not found."
-            )
+            raise ProjectNotFoundError(project_name)
 
         return project
 
@@ -82,9 +74,7 @@ class ProjectService:
             )
 
             if project is None:
-                raise ProjectNotFoundError(
-                    f"Project '{project_name}' was not found."
-                )
+                raise ProjectNotFoundError(project_name)
 
             changes = data.model_dump(exclude_unset=True)
 
@@ -94,9 +84,7 @@ class ProjectService:
                 )
 
                 if existing is not None and existing.id != project.id:
-                    raise ProjectAlreadyExistsError(
-                        f"Project '{changes['name']}' already exists."
-                    )
+                    raise DuplicateProjectError(changes["name"])
 
             for field, value in changes.items():
                 setattr(project, field, value)
@@ -117,8 +105,6 @@ class ProjectService:
             )
 
             if project is None:
-                raise ProjectNotFoundError(
-                    f"Project '{project_name}' was not found."
-                )
+                raise ProjectNotFoundError(project_name)
 
             await self.repository.delete(project)
