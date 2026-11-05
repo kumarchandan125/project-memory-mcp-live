@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project_memory_mcp_live.models.project import Project
@@ -10,6 +11,19 @@ from project_memory_mcp_live.services.exceptions import (
     DuplicateProjectError,
     ProjectNotFoundError,
 )
+
+_PROJECT_NAME_INDEX = "ix_projects_name"
+
+
+def _is_project_name_conflict(error: IntegrityError) -> bool:
+    """Return whether a PostgreSQL error is the project-name unique conflict."""
+
+    original_error = error.orig
+    diagnostic = getattr(original_error, "diag", None)
+    return (
+        getattr(original_error, "sqlstate", None) == "23505"
+        and getattr(diagnostic, "constraint_name", None) == _PROJECT_NAME_INDEX
+    )
 
 
 class ProjectService:
@@ -25,21 +39,24 @@ class ProjectService:
     ) -> Project:
         """Validate uniqueness and create a project."""
 
-        async with self.session.begin():
-            existing = await self.repository.get_by_name(
-                data.name
-            )
+        try:
+            async with self.session.begin():
+                existing = await self.repository.get_by_name(data.name)
 
-            if existing is not None:
-                raise DuplicateProjectError(data.name)
+                if existing is not None:
+                    raise DuplicateProjectError(data.name)
 
-            project = await self.repository.create(
-                name=data.name,
-                description=data.description,
-                tech_stack=data.tech_stack,
-            )
+                project = await self.repository.create(
+                    name=data.name,
+                    description=data.description,
+                    tech_stack=data.tech_stack,
+                )
 
-            return project
+                return project
+        except IntegrityError as exc:
+            if _is_project_name_conflict(exc):
+                raise DuplicateProjectError(data.name) from exc
+            raise
 
     async def get_project(
         self,
@@ -47,9 +64,7 @@ class ProjectService:
     ) -> Project:
         """Retrieve a project by name."""
 
-        project = await self.repository.get_by_name(
-            project_name
-        )
+        project = await self.repository.get_by_name(project_name)
 
         if project is None:
             raise ProjectNotFoundError(project_name)
@@ -68,30 +83,31 @@ class ProjectService:
     ) -> Project:
         """Update an existing project."""
 
-        async with self.session.begin():
-            project = await self.repository.get_by_name(
-                project_name
-            )
+        try:
+            async with self.session.begin():
+                project = await self.repository.get_by_name(project_name)
 
-            if project is None:
-                raise ProjectNotFoundError(project_name)
+                if project is None:
+                    raise ProjectNotFoundError(project_name)
 
-            changes = data.model_dump(exclude_unset=True)
+                changes = data.model_dump(exclude_unset=True)
 
-            if "name" in changes and changes["name"] is not None:
-                existing = await self.repository.get_by_name(
-                    changes["name"]
-                )
+                if "name" in changes and changes["name"] is not None:
+                    existing = await self.repository.get_by_name(changes["name"])
 
-                if existing is not None and existing.id != project.id:
-                    raise DuplicateProjectError(changes["name"])
+                    if existing is not None and existing.id != project.id:
+                        raise DuplicateProjectError(changes["name"])
 
-            for field, value in changes.items():
-                setattr(project, field, value)
+                for field, value in changes.items():
+                    setattr(project, field, value)
 
-            await self.session.flush()
+                await self.session.flush()
 
-            return project
+                return project
+        except IntegrityError as exc:
+            if data.name is not None and _is_project_name_conflict(exc):
+                raise DuplicateProjectError(data.name) from exc
+            raise
 
     async def delete_project(
         self,
@@ -100,9 +116,7 @@ class ProjectService:
         """Delete a project."""
 
         async with self.session.begin():
-            project = await self.repository.get_by_name(
-                project_name
-            )
+            project = await self.repository.get_by_name(project_name)
 
             if project is None:
                 raise ProjectNotFoundError(project_name)

@@ -25,13 +25,9 @@ def get_database_url() -> str:
     if settings.database_url is None:
         raise RuntimeError("DATABASE_URL is not configured.")
 
-    database_url = build_async_database_url(
-        settings.database_url.get_secret_value()
-    )
+    database_url = build_async_database_url(settings.database_url.get_secret_value())
 
-    return database_url.render_as_string(
-        hide_password=False
-    )
+    return database_url.render_as_string(hide_password=False)
 
 
 def run_migrations_offline() -> None:

@@ -38,9 +38,7 @@ class ProjectRepository:
     ) -> Project | None:
         """Find a project using its UUID."""
 
-        statement = select(Project).where(
-            Project.id == project_id
-        )
+        statement = select(Project).where(Project.id == project_id)
 
         result = await self.session.execute(statement)
 
@@ -52,9 +50,7 @@ class ProjectRepository:
     ) -> Project | None:
         """Find a project using its name."""
 
-        statement = select(Project).where(
-            Project.name == name
-        )
+        statement = select(Project).where(Project.name == name)
 
         result = await self.session.execute(statement)
 
@@ -66,14 +62,10 @@ class ProjectRepository:
     ) -> list[Project]:
         """Return all projects, optionally filtered by status."""
 
-        statement = select(Project).order_by(
-            Project.created_at.desc()
-        )
+        statement = select(Project).order_by(Project.created_at.desc())
 
         if status is not None:
-            statement = statement.where(
-                Project.status == status
-            )
+            statement = statement.where(Project.status == status)
 
         result = await self.session.execute(statement)
 

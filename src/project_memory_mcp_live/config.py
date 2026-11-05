@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     database_url: SecretStr | None = None
+    test_database_url: SecretStr | None = None
 
 
 @lru_cache

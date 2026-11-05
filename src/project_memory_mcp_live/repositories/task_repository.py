@@ -43,9 +43,7 @@ class TaskRepository:
     ) -> Task | None:
         """Retrieve a task by UUID."""
 
-        statement = select(Task).where(
-            Task.id == task_id
-        )
+        statement = select(Task).where(Task.id == task_id)
 
         result = await self.session.execute(statement)
 
@@ -59,23 +57,15 @@ class TaskRepository:
     ) -> list[Task]:
         """Retrieve tasks with optional filters."""
 
-        statement = select(Task).where(
-            Task.project_id == project_id
-        )
+        statement = select(Task).where(Task.project_id == project_id)
 
         if status is not None:
-            statement = statement.where(
-                Task.status == status
-            )
+            statement = statement.where(Task.status == status)
 
         if priority is not None:
-            statement = statement.where(
-                Task.priority == priority
-            )
+            statement = statement.where(Task.priority == priority)
 
-        statement = statement.order_by(
-            Task.created_at.desc()
-        )
+        statement = statement.order_by(Task.created_at.desc())
 
         result = await self.session.execute(statement)
 

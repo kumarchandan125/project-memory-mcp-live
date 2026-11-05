@@ -26,9 +26,7 @@ class DecisionService:
         """Record a technical decision."""
 
         async with self.session.begin():
-            project = await self.project_repository.get_by_id(
-                project_id
-            )
+            project = await self.project_repository.get_by_id(project_id)
 
             if project is None:
                 raise ValueError("Project not found.")
@@ -50,9 +48,7 @@ class DecisionService:
         if not 1 <= limit <= 100:
             raise ValueError("Limit must be between 1 and 100.")
 
-        project = await self.project_repository.get_by_id(
-            project_id
-        )
+        project = await self.project_repository.get_by_id(project_id)
 
         if project is None:
             raise ValueError("Project not found.")

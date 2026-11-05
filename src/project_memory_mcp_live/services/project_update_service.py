@@ -10,9 +10,8 @@ from project_memory_mcp_live.repositories import (
 from project_memory_mcp_live.schemas.project_update import (
     ProjectUpdateCreate,
 )
-from project_memory_mcp_live.services.exceptions import(
-    ProjectNotFoundError
-)
+from project_memory_mcp_live.services.exceptions import ProjectNotFoundError
+
 
 class ProjectUpdateService:
     """Business logic for development progress."""
@@ -30,9 +29,7 @@ class ProjectUpdateService:
         """Save a development update."""
 
         async with self.session.begin():
-            project = await self.project_repository.get_by_id(
-                project_id
-            )
+            project = await self.project_repository.get_by_id(project_id)
 
             if project is None:
                 raise ProjectNotFoundError(str(project_id))
@@ -52,9 +49,7 @@ class ProjectUpdateService:
         if not 1 <= limit <= 100:
             raise ValueError("Limit must be between 1 and 100.")
 
-        project = await self.project_repository.get_by_id(
-            project_id
-        )
+        project = await self.project_repository.get_by_id(project_id)
 
         if project is None:
             raise ProjectNotFoundError(str(project_id))

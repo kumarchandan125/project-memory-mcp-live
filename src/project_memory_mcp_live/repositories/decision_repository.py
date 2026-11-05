@@ -39,9 +39,7 @@ class DecisionRepository:
     ) -> Decision | None:
         """Retrieve a decision by UUID."""
 
-        statement = select(Decision).where(
-            Decision.id == decision_id
-        )
+        statement = select(Decision).where(Decision.id == decision_id)
 
         result = await self.session.execute(statement)
 

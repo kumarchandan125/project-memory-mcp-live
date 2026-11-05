@@ -15,11 +15,11 @@ from project_memory_mcp_live.schemas.task import (
     TaskCreate,
     TaskUpdateInput,
 )
-
-from project_memory_mcp_live.services.exceptions import(
+from project_memory_mcp_live.services.exceptions import (
     ProjectNotFoundError,
-    TaskNotFoundError
+    TaskNotFoundError,
 )
+
 
 class TaskService:
     """Business logic for project tasks."""
@@ -37,9 +37,7 @@ class TaskService:
         """Create a task for an existing project."""
 
         async with self.session.begin():
-            project = await self.project_repository.get_by_id(
-                project_id
-            )
+            project = await self.project_repository.get_by_id(project_id)
 
             if project is None:
                 raise ProjectNotFoundError(str(project_id))

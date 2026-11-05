@@ -35,9 +35,7 @@ class ProjectUpdateRepository:
     ) -> ProjectUpdate | None:
         """Retrieve an update by its UUID."""
 
-        statement = select(ProjectUpdate).where(
-            ProjectUpdate.id == update_id
-        )
+        statement = select(ProjectUpdate).where(ProjectUpdate.id == update_id)
 
         result = await self.session.execute(statement)
 
