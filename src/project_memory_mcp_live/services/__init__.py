@@ -10,10 +10,10 @@ from project_memory_mcp_live.services.project_update_service import (
 from project_memory_mcp_live.services.task_services import TaskService
 
 __all__ = [
-    "ProjectService",
-    "TaskService",
-    "ProjectUpdateService",
     "DecisionService",
     "ProjectAlreadyExistsError",
     "ProjectNotFoundError",
+    "ProjectService",
+    "ProjectUpdateService",
+    "TaskService",
 ]

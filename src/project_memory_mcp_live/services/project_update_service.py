@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from project_memory_mcp_live.models.project_update import ProjectUpdate
 from project_memory_mcp_live.repositories import (
     ProjectRepository,
     ProjectUpdateRepository,
@@ -9,7 +10,6 @@ from project_memory_mcp_live.repositories import (
 from project_memory_mcp_live.schemas.project_update import (
     ProjectUpdateCreate,
 )
-from project_memory_mcp_live.models.project_update import ProjectUpdate
 
 
 class ProjectUpdateService:
