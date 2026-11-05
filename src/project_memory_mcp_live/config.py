@@ -3,3 +3,34 @@ from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings,SettingsConfigDict
+from dotenv import load_dotenv
+load_dotenv()
+
+
+
+class Settings(BaseSettings):
+    model_config=SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    app_name:str="Project Memory MCP Server"
+
+    app_env:Literal[
+        "development",
+        "test",
+        "production",  
+    ]= "development"
+
+    host:str="127.0.0.1"
+    port:int=8000
+
+    log_level:str="INFO"
+
+    database_url:SecretStr | None=None
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
