@@ -1,4 +1,5 @@
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -9,6 +10,11 @@ from project_memory_mcp_live.models.base import (
     TimestampMixin,
     UUIDPrimaryKeyMixin,
 )
+
+if TYPE_CHECKING:
+    from project_memory_mcp_live.models.decision import Decision
+    from project_memory_mcp_live.models.project_update import ProjectUpdate
+    from project_memory_mcp_live.models.task import Task
 
 
 class ProjectStatus(str, enum.Enum):
