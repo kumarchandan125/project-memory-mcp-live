@@ -4,6 +4,7 @@ from fastmcp import FastMCP
 
 from project_memory_mcp_live.config import get_settings
 from project_memory_mcp_live.database import check_database_connection
+from project_memory_mcp_live.tools import register_all_tools
 
 settings = get_settings()
 
@@ -15,7 +16,13 @@ logging.basicConfig(
 
 logger = logging.getLogger("project_memory_mcp_live.server")
 
-mcp = FastMCP(settings.app_name)
+mcp = FastMCP(
+    settings.app_name,
+    mask_error_details=True
+)
+
+#register all application tools
+register_all_tools(mcp)
 
 
 @mcp.tool

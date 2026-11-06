@@ -155,3 +155,28 @@ def register_project_tools(mcp: FastMCP) -> None:
             raise ToolError(
                 "Unable to update the requested project."
             ) from exc
+
+    @mcp.tool()
+    async def delete_project(project_name: str) -> dict:
+        """
+        Delete a saved project and its associated records.
+
+        Use this only when the user explicitly requests deletion
+        of a project. Confirm the intended project before deleting it.
+        """
+        try:
+            async with get_session() as session:
+                service = ProjectService(session)
+                await service.delete_project(project_name)
+
+                return {
+                    "success": True,
+                    "message": f"Project '{project_name}' deleted successfully.",
+                }
+
+        except ApplicationError as exc:
+            raise ToolError(str(exc)) from exc
+
+        except Exception as exc:
+            logger.exception("Failed to delete project")
+            raise ToolError("Unable to delete the project.") from exc  
