@@ -105,3 +105,19 @@ class TaskService:
                 raise TaskNotFoundError(str(task_id))
 
             await self.task_repository.delete(task)
+
+    async def create_task_for_project(self,project_name: str,data: TaskCreate,) -> Task:
+        async with self.session.begin():
+            project = await self.project_repository.get_by_name(project_name)    
+            if project is None:
+                raise ProjectNotFoundError(project_name)
+            return await self.task_repository.create(
+                project_id=project.id,
+                title=data.title,
+                description=data.description,
+                priority=data.priority            
+            )
+              
+
+            
+         
