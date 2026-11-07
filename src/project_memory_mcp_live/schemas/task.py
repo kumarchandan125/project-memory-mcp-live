@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from project_memory_mcp_live.models.task import TaskPriority, TaskStatus
@@ -34,8 +36,8 @@ class TaskUpdateInput(BaseModel):
 class TaskResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     title: str
     description: str | None
     status: TaskStatus

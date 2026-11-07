@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -11,6 +13,6 @@ class ProjectUpdateCreate(BaseModel):
 class ProjectUpdateResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     content: str

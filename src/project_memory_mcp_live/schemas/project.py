@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from project_memory_mcp_live.models.project import ProjectStatus
@@ -49,7 +51,7 @@ class ProjectResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     name: str
     description: str | None
     status: ProjectStatus

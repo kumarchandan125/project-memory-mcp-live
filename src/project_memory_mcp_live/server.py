@@ -1,4 +1,6 @@
 import logging
+import asyncio
+import sys
 
 from fastmcp import FastMCP
 
@@ -24,6 +26,9 @@ mcp = FastMCP(
 #register all application tools
 register_all_tools(mcp)
 
+
+
+# ========================= Health Check =====================
 
 @mcp.tool
 async def check_system_health() -> dict[str, str]:
@@ -56,17 +61,28 @@ async def check_system_health() -> dict[str, str]:
         "message": "Application and database are working correctly.",
     }
 
+# ========================= Server Startup ===================
+async def main()-> None:
+    """Start the fastmcp HTTP server"""
+    logger.info("Starting %s...",settings.app_name)
 
-def main() -> None:
-    """Run the MCP HTTP server."""
-
-    logger.info("Starting %s on %s:%s", settings.app_name, settings.host, settings.port)
-    mcp.run(
+    await mcp.run_async(
         transport="http",
         host=settings.host,
-        port=settings.port,
+        port=settings.port
     )
 
+if __name__=="__main__":
+    if sys.platform=='win32':
+        # Psycopg async connections require a compatible event loop on Windows.
+        asyncio.run(
+            main(),
+            loop_factory=asyncio.SelectorEventLoop,
+        )
+    else:
+        asyncio.run(main())
+        
 
-if __name__ == "__main__":
-    main()
+
+        
+    

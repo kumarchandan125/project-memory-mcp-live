@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -21,8 +23,8 @@ class DecisionCreate(BaseModel):
 class DecisionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     title: str
     decision: str
     reasoning: str | None
