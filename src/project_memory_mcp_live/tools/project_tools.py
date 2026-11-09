@@ -6,13 +6,13 @@ from fastmcp.exceptions import ToolError
 from project_memory_mcp_live.database import get_session
 from project_memory_mcp_live.schemas.project import (
     ProjectCreate,
-    ProjectUpdateInput,
     ProjectResponse,
+    ProjectUpdateInput,
 )
-from project_memory_mcp_live.services.project_services import ProjectService
 from project_memory_mcp_live.services.exceptions import (
     ApplicationError,
 )
+from project_memory_mcp_live.services.project_services import ProjectService
 
 logger = logging.getLogger(__name__)
 

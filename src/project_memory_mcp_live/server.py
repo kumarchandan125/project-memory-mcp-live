@@ -11,7 +11,6 @@ from project_memory_mcp_live.config import get_settings
 from project_memory_mcp_live.database import check_database_connection
 from project_memory_mcp_live.tools import register_all_tools
 
-
 # ========================= Configuration =========================
 
 settings = get_settings()

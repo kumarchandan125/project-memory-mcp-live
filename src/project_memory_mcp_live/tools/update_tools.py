@@ -9,10 +9,10 @@ from project_memory_mcp_live.schemas.project_update import (
     ProjectUpdateCreate,
     ProjectUpdateResponse,
 )
+from project_memory_mcp_live.services.exceptions import ApplicationError
 from project_memory_mcp_live.services.project_update_service import (
     ProjectUpdateService,
 )
-from project_memory_mcp_live.services.exceptions import ApplicationError
 
 logger = logging.getLogger(__name__)
 

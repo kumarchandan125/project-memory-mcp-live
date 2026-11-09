@@ -6,9 +6,13 @@ from fastmcp.exceptions import ToolError
 
 from project_memory_mcp_live.database import get_session
 from project_memory_mcp_live.models.task import TaskPriority, TaskStatus
-from project_memory_mcp_live.schemas.task import TaskCreate, TaskUpdateInput, TaskResponse
-from project_memory_mcp_live.services.task_services import TaskService
+from project_memory_mcp_live.schemas.task import (
+    TaskCreate,
+    TaskResponse,
+    TaskUpdateInput,
+)
 from project_memory_mcp_live.services.exceptions import ApplicationError
+from project_memory_mcp_live.services.task_services import TaskService
 
 logger = logging.getLogger(__name__)
 
