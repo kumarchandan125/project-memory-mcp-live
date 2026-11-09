@@ -9,10 +9,10 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.1",
-    "dotenv>=0.9.9",
     "fastmcp>=4.1.6",
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.7",
+    "python-dotenv>=1.2.4",
     "sqlalchemy[asyncio]>=2.0",
 ]
 
