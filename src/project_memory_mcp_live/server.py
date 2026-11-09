@@ -4,9 +4,8 @@ import logging
 import sys
 
 from fastmcp import FastMCP
-from fastmcp.server.auth import TokenVerifier
 
-from project_memory_mcp_live.auth import ProjectMemoryTokenVerifier
+from project_memory_mcp_live.auth import build_auth_verifier
 from project_memory_mcp_live.config import get_settings
 from project_memory_mcp_live.database import check_database_connection
 from project_memory_mcp_live.tools import register_all_tools
@@ -33,26 +32,15 @@ logger = logging.getLogger("project_memory_mcp_live.server")
 
 # ========================= Authentication =======================
 
-auth: TokenVerifier | None = None
+auth = build_auth_verifier(settings)
 
-if settings.app_env == "production":
-
-    if settings.auth_token is None:
-        raise RuntimeError(
-            "AUTH_TOKEN must be configured in production."
-        )
-
-    auth = ProjectMemoryTokenVerifier(
-        expected_token=settings.auth_token.get_secret_value()
-    )
-
-    logger.info("Production bearer token authentication enabled.")
-
-else:
+if auth is None:
     logger.warning(
         "Authentication is disabled. "
-        "This configuration is intended for local development only."
+        "APP_ENV=development is intended for local use only."
     )
+else:
+    logger.info("Bearer token authentication enabled.")
 
 
 # ========================= FastMCP Server ========================
@@ -122,8 +110,8 @@ async def main() -> None:
     )
 
 
-if __name__ == "__main__":
-
+def cli() -> None:
+    """Run the HTTP server from the installed console script."""
     if sys.platform == "win32":
         # Psycopg async connections require a compatible event loop on Windows.
         asyncio.run(
@@ -133,3 +121,7 @@ if __name__ == "__main__":
 
     else:
         asyncio.run(main())
+
+
+if __name__ == "__main__":
+    cli()

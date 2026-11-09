@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Mapping
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,25 +75,12 @@ class ProjectRepository:
     async def update(
         self,
         project: Project,
-        *,
-        name: str | None = None,
-        description: str | None = None,
-        tech_stack: list[str] | None = None,
-        status: ProjectStatus | None = None,
+        changes: Mapping[str, object],
     ) -> Project:
         """Update the provided project fields."""
 
-        if name is not None:
-            project.name = name
-
-        if description is not None:
-            project.description = description
-
-        if tech_stack is not None:
-            project.tech_stack = list(tech_stack)
-
-        if status is not None:
-            project.status = status
+        for field, value in changes.items():
+            setattr(project, field, value)
 
         await self.session.flush()
 

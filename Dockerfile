@@ -1,30 +1,31 @@
-
+FROM ghcr.io/astral-sh/uv:0.8.4 AS uv
 FROM python:3.13-slim
 
-# Install uv
-RUN pip install --no-cache-dir uv
+COPY --from=uv /uv /uvx /bin/
 
-WORKDIR /app
-
-# Python and uv configuration
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    HOST=0.0.0.0 \
+    PORT=8000
 
-# Copy dependency files first
-COPY pyproject.toml uv.lock README.md ./
+RUN groupadd --system app \
+    && useradd --uid 10001 --gid app --create-home --shell /usr/sbin/nologin app
 
-# Copy application source and migrations
-COPY src ./src
-COPY migrations ./migrations
-COPY alembic.ini ./
+WORKDIR /app
 
-# Install production dependencies using the lockfile
+COPY --chown=app:app pyproject.toml uv.lock README.md ./
+COPY --chown=app:app src ./src
+COPY --chown=app:app migrations ./migrations
+COPY --chown=app:app alembic.ini ./
+
+RUN chown app:app /app
+
+USER app
+
 RUN uv sync --frozen --no-dev
 
-# Railway will provide the PORT environment variable
 EXPOSE 8000
 
-# Start the FastMCP server
-CMD ["uv", "run", "--no-sync", "python", "-m", "project_memory_mcp_live.server"]
+CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && exec uv run --no-sync project-memory-mcp-live"]

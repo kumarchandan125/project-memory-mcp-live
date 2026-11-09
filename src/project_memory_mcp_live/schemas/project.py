@@ -1,6 +1,7 @@
+from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from project_memory_mcp_live.models.project import ProjectStatus
 
@@ -44,6 +45,16 @@ class ProjectUpdateInput(BaseModel):
     )
 
     status: ProjectStatus | None = None
+
+    @model_validator(mode="after")
+    def reject_null_non_nullable_fields(self) -> Self:
+        if "name" in self.model_fields_set and self.name is None:
+            raise ValueError("Project name cannot be null.")
+        if "tech_stack" in self.model_fields_set and self.tech_stack is None:
+            raise ValueError("Project tech_stack cannot be null.")
+        if "status" in self.model_fields_set and self.status is None:
+            raise ValueError("Project status cannot be null.")
+        return self
 
 
 class ProjectResponse(BaseModel):

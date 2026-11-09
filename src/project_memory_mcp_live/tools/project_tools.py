@@ -159,10 +159,10 @@ def register_project_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def delete_project(project_name: str) -> dict:
         """
-        Delete a saved project and its associated records.
+        Permanently delete an archived project and its associated records.
 
-        Use this only when the user explicitly requests deletion
-        of a project. Confirm the intended project before deleting it.
+        Archive the project first. Use this only when the user explicitly
+        requests permanent deletion and confirms the intended project.
         """
         try:
             async with get_session() as session:

@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from project_memory_mcp_live.models.project import Project
+from project_memory_mcp_live.models.project import Project, ProjectStatus
 from project_memory_mcp_live.repositories import ProjectRepository
 from project_memory_mcp_live.schemas.project import (
     ProjectCreate,
@@ -9,6 +9,7 @@ from project_memory_mcp_live.schemas.project import (
 )
 from project_memory_mcp_live.services.exceptions import (
     DuplicateProjectError,
+    ProjectNotArchivedError,
     ProjectNotFoundError,
 )
 
@@ -98,12 +99,7 @@ class ProjectService:
                     if existing is not None and existing.id != project.id:
                         raise DuplicateProjectError(changes["name"])
 
-                for field, value in changes.items():
-                    setattr(project, field, value)
-
-                await self.session.flush()
-
-                return project
+                return await self.repository.update(project, changes)
         except IntegrityError as exc:
             if data.name is not None and _is_project_name_conflict(exc):
                 raise DuplicateProjectError(data.name) from exc
@@ -120,5 +116,8 @@ class ProjectService:
 
             if project is None:
                 raise ProjectNotFoundError(project_name)
+
+            if project.status != ProjectStatus.ARCHIVED:
+                raise ProjectNotArchivedError(project_name)
 
             await self.repository.delete(project)

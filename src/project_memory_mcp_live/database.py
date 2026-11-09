@@ -80,19 +80,10 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
 @asynccontextmanager
 async def get_session() -> AsyncIterator[AsyncSession]:
     """Provide a fresh database session for one operation."""
-    _session_factory = get_session_factory()
+    session_factory = get_session_factory()
 
-    async with _session_factory() as session:
+    async with session_factory() as session:
         yield session
-
-
-# async def get_session() -> AsyncIterator[AsyncSession]:
-#     """Provide a database session and close it after use."""
-
-#     session_factory = get_session_factory()
-
-#     async with session_factory() as session:
-#         yield session
 
 
 async def check_database_connection() -> None:

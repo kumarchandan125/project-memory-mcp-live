@@ -1,7 +1,7 @@
 [project]
 name = "project-memory-mcp-live"
 version = "0.1.0"
-description = "Add your description here"
+description = "A FastMCP server for storing and retrieving project context with PostgreSQL."
 readme = "README.md"
 authors = [
     { name = "kumarchandan125", email = "chandanpandey6048178@gmail.com" }
@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-project-memory-mcp-live = "project_memory_mcp_live:main"
+project-memory-mcp-live = "project_memory_mcp_live.server:cli"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]

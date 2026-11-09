@@ -12,6 +12,14 @@ class ProjectNotFoundError(ResourceNotFoundError):
         super().__init__(f"Project '{project_name}' was not found.")
 
 
+class ProjectNotArchivedError(ApplicationError):
+    def __init__(self, project_name: str):
+        self.project_name = project_name
+        super().__init__(
+            f"Project '{project_name}' must be archived before it can be deleted."
+        )
+
+
 class TaskNotFoundError(ResourceNotFoundError):
     def __init__(self, task_id: str):
         self.task_id = task_id
