@@ -31,6 +31,7 @@ class Settings(BaseSettings):
 
     database_url: SecretStr | None = None
     test_database_url: SecretStr | None = None
+    auth_token: SecretStr | None = None
 
 
 @lru_cache
